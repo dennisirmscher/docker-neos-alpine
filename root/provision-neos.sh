@@ -10,6 +10,7 @@ else
     /init-xdebug.sh
 
     # Layout default directory structure
+    mkdir -p /data/www-temp
     mkdir -p /data/www
     mkdir -p /data/logs
     mkdir -p /data/tmp/nginx
@@ -17,8 +18,11 @@ else
     ###
     # Install into /data/www
     ###
-    cd /data/www
+    cd /data/www-temp
     git clone -b $VERSION $REPOSITORY_URL .
+    cp -a /data/www-temp/. /data/www/
+    cd /data/www
+    rm -rf /data/www-temp
     composer install --prefer-source
 
     # Apply beard patches
