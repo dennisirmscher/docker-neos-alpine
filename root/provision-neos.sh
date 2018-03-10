@@ -4,13 +4,12 @@ set -ex
 # Provision conainer at first run
 if [ -f /data/www/composer.json ] || [ -z "$REPOSITORY_URL" ]
 then
-	echo "Do nothing, initial provisioning done"
+    echo "Do nothing, initial provisioning done"
 else
     # Make sure to init xdebug, not to slow-down composer
     /init-xdebug.sh
 
     # Layout default directory structure
-    mkdir -p /data/www-temp
     mkdir -p /data/www
     mkdir -p /data/logs
     mkdir -p /data/tmp/nginx
@@ -18,11 +17,18 @@ else
     ###
     # Install into /data/www
     ###
-    cd /data/www-temp
-    git clone -b $VERSION $REPOSITORY_URL .
-    cp -a /data/www-temp/. /data/www/
-    cd /data/www
-    rm -rf /data/www-temp
+    if [ -f /data/www/composer.json ]
+        then
+            cd /data/www
+            git clone -b $VERSION $REPOSITORY_URL .
+        else
+            mkdir -p /data/www-provisioned
+            cd /data/www-provisioned
+            git clone -b $VERSION $REPOSITORY_URL .
+            cp -a /data/www-provisioned/. /data/www/
+            cd /data/www
+            rm -rf /data/www-provisioned
+    fi
     composer install --prefer-source
 
     # Apply beard patches
@@ -39,15 +45,15 @@ else
 
     # Set permissions
     chown www-data:www-data -R /tmp/
-	chown www-data:www-data -R /data/
-	chmod g+rwx -R /data/
+    chown www-data:www-data -R /data/
+    chmod g+rwx -R /data/
 
-	# Set ssh permissions
-	if [ -z "/data/.ssh/authorized_keys" ]
-		then
-			chown www-data:www-data -R /data/.ssh
-			chmod go-w /data/
-			chmod 700 /data/.ssh
-			chmod 600 /data/.ssh/authorized_keys
-	fi
+    # Set ssh permissions
+    if [ -z "/data/.ssh/authorized_keys" ]
+        then
+            chown www-data:www-data -R /data/.ssh
+            chmod go-w /data/
+            chmod 700 /data/.ssh
+            chmod 600 /data/.ssh/authorized_keys
+    fi
 fi
